@@ -206,7 +206,7 @@ class DiceSetParser:
                     self.statement_stream.add_while(n>0,flow_token.data,self.print_delimiter)
 
     def parse_statement(self,statement : GrammerNode,parenth = []):
-        print(statement.get_summary())
+        #print(statement.get_summary())
         expr = statement.sub_tokens[0]
         expression_token = expr.sub_tokens[0]
         
