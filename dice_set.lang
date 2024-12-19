@@ -1,10 +1,13 @@
 number = [0-9]+
 parenthasis = __P[0-9]+__
 arithmatic_operator = <=|>=|<|>|==|\+|-|\*|/
+matrix_column_operator = ,
+matrix_row_operator = :
 set_operator = T..D..B
 set_compressor = d
 unary_set_compressor = s
 eos = ;
+anything = .*
 dash = -
 first_dash = ^-
 open_range = \{
@@ -19,16 +22,22 @@ equals = =
 
 
 
+
 assignment = <variable><equals><arithmatic>|<variable><equals><set>
 set = <set><set_operator><set>|<arithmatic>|<range>
 
 arithmatic =
             <arithmatic><arithmatic_operator><arithmatic>
             <arithmatic><set_compressor><set>
+            <matrix>
             <unary_set_compressor><set>
             <number>
             <variable>
             <parenthasis>
+
+matrix = <matrix_row><matrix_row_operator><matrix> | <matrix_row>
+matrix_row = <arithmatic><matrix_column_operator><arithmatic>
+
 
 range = <open_range><number><dash><number><close_range>|<number>
 

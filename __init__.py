@@ -39,6 +39,9 @@ class DiceSetParser:
         s.sort(*args)
         return s
     
+    """
+    turn constants into lists for the set functions to be happy
+    """
     def setify(self,n)-> [float]:
         if type(n) is float or type(n) is int: return [i for i in range(1,int(n)+1)]
         if type(n) is list: return n
@@ -67,6 +70,7 @@ class DiceSetParser:
             self.do_compile = False
             self.tab_order = 0
 
+        #used when adding two numbers together
         self.arithmatic_operators = {
                 "+": lambda x,y : x+y,
                 "-": lambda x,y : x-y,
@@ -79,28 +83,41 @@ class DiceSetParser:
                 "==": lambda x,y : int(x==y),
                 }
         
+        #used to compress sets down into a single number but take in a number as an option
         self.set_compressors = {
                 'd': lambda n,s: sum([random.choice(self.setify(s)) for _ in range(int(n))])
                 }
+        
+        #used to compress sets down to a single number
         self.unary_set_compressors = {
                 's': lambda s: sum(self.setify(s))
                 }
+        
+        #take in two sets and output a new set
         self.set_operators = {
                 'D' : lambda n,s: [random.choice(self.setify(s)) for _ in range(int(n))],
                 'T' : lambda n,s : self.sort_set(self.setify(s))[-int(n):],
                 'B' : lambda n,s : self.sort_set(self.setify(s))[:int(n)]
                 }
         
+        #iterator that gives us the next statement to parse
         self.statement_stream : ControlFlowIterator = None
 
+        #the buffer that we place output into
         self.out_buffer = ""
 
     def stream_out(self,*args,**kwargs)->None:
+        """
+        sends data to the output buffer used to get our dynamic end line working
+        """
         data = ""
         if len(args) >0: data = args[0]
         self.out_buffer += str(data) + kwargs["end"] if "end" in kwargs else "\n"
 
     def parse_assignment(self,token : GrammerNode,parenth)->None:
+        """
+        parses assinging a value to a variable
+        """
         var_name = token.sub_tokens[0].data
         if token.sub_tokens[2].token.name == "arithmatic":
             
@@ -115,6 +132,9 @@ class DiceSetParser:
             self.variable_map[var_name] = self.parse_set(token.sub_tokens[2],parenth)
 
     def parse_print_flow(self,token : GrammerNode,parenth = [])->None:
+        """
+        handles parsing the delimter changes in the language (the -100S+ syntax)
+        """
 
         if not (token.sub_tokens[0].sub_tokens[0].token.name == "flow_end" 
                or
@@ -142,6 +162,9 @@ class DiceSetParser:
 
 
     def parse_control_flow(self,token : GrammerNode,parenth = [])->None:
+        """
+        handles parsing of control flow operations
+        """
         flow_token = token.sub_tokens[0]
         flow_type = flow_token.token.name
         match flow_type:
@@ -183,6 +206,7 @@ class DiceSetParser:
                     self.statement_stream.add_while(n>0,flow_token.data,self.print_delimiter)
 
     def parse_statement(self,statement : GrammerNode,parenth = []):
+        print(statement.get_summary())
         expr = statement.sub_tokens[0]
         expression_token = expr.sub_tokens[0]
         
@@ -225,9 +249,14 @@ class DiceSetParser:
                     self.parse_assignment(expression_token,parenth)
                 case "print_control_flow":
                     self.parse_print_flow(expression_token,parenth)
+                case "matrix":
+                    self.parse_matrix(expression_token,parenth)
             
             if self.do_compile:
                 self.stream_out()
+
+    def parse_matrix(self, matrix_node : GrammerNode,parenth = []):
+        print(matrix_node)
 
     def parse_set(self,set_node : GrammerNode,parenth = []):#->float | [float]:
         inner_token : GrammerNode = set_node.sub_tokens[0]

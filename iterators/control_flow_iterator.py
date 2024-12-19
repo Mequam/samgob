@@ -8,12 +8,17 @@ class ControlFlowIterator:
         #the stack of loops that we are currently in
         self.flow_stack = []
         #we only store statements in memory that we need
+        #all other statments are discarded
         self.statement_memory = []
         #the current statement that we are working with
         self.statement_idx = -1
+        #determines if we are currently in a while loop
         self.while_flag = False
+        #flag indicating we finish a loop
         self.eos_loop_end = "--"
 
+        #function called when we break out of a loop or if statment, this is set elsewhere so for now
+        #we default it to doing nothing
         self.break_callback = lambda x : x
 
     #adds a for loop to the flow stack
@@ -105,11 +110,6 @@ class ControlFlowIterator:
 
 
     def __next__(self):
-        #print(self.statement_idx)
-        #print(self.statement_memory)
-        #print(self.flow_stack)
-        #print(self.while_flag)
-
         if not self.in_loop(): return next(self.incoming_stream)
         
         if self.statement_idx >= len(self.statement_memory)-1:
