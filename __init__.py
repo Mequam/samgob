@@ -5,6 +5,7 @@ from .goblang.read_lang import LanguageMap
 from .goblang.read_lang import GrammerNode
 from .goblang.read_lang import hide_parenthasis
 from .errors import ParseError
+from DAKMatrix import Matrix
 
 #for typing
 from samgob.iterators.control_flow_iterator import ControlFlowIterator
@@ -235,7 +236,12 @@ class DiceSetParser:
                         self.stream_out('\n,end=get_delimiter())')
                     else:
                         n = self.parse_arithmatic(expression_token,parenth)
-                        self.stream_out("%g" % n, end=self.print_delimiter)
+                        
+                        if isinstance(n, Matrix):
+                            self.stream_out(str(n),end=self.print_delimiter)
+                        else:
+                            self.stream_out("%g" % n, end=self.print_delimiter)
+
                 case "set":
                     if self.do_compile:
                         self.stream_out("\t"*self.tab_order + "print(")
@@ -249,14 +255,55 @@ class DiceSetParser:
                     self.parse_assignment(expression_token,parenth)
                 case "print_control_flow":
                     self.parse_print_flow(expression_token,parenth)
-                case "matrix":
-                    self.parse_matrix(expression_token,parenth)
             
             if self.do_compile:
                 self.stream_out()
 
-    def parse_matrix(self, matrix_node : GrammerNode,parenth = []):
-        print(matrix_node)
+    def parse_matrix_row(self,matrix_row : GrammerNode,parenth = [])->[float]:
+        ret_val = []
+        walker = matrix_row
+        
+        ret_val.append(self.parse_arithmatic(walker.sub_tokens[0],parenth))
+
+        #see the language specs (dice_set.lang) for how were walking through this
+        #basically matricies will allways have an arithmatic node as their second node,
+        #but with a matrix row that row might be another matrix attached to the current
+        #matrix row, we walk along these rows and parse out the values, until we reach the end
+        #of the matrix rows
+        while walker.sub_tokens[2].sub_tokens[0].token.name == "matrix":
+            walker = walker.sub_tokens[2].sub_tokens[0].sub_tokens[0]
+            ret_val.append(self.parse_arithmatic(walker.sub_tokens[0],parenth))
+
+        ret_val.append(self.parse_arithmatic(walker.sub_tokens[2],parenth))
+        
+        return ret_val
+    
+
+    def walk_matrix(self,matrix_node : GrammerNode,matrix = [],parenth = []):
+        """
+        this function walks along a matrix, and parses out the rows of that matrix
+        as float arrays, storing them in the matrix buffer passed to it from above
+        """
+        #print(matrix_node.token.name)
+        #print(matrix_node.data)
+        if matrix_node.token.name == "matrix_row": #only a matrix row
+            matrix.append(
+                self.parse_matrix_row(matrix_node,parenth)
+            )
+        elif matrix_node.token.name == "matrix":
+            if len(matrix_node.sub_tokens) == 3:
+                self.walk_matrix(matrix_node.sub_tokens[0],matrix,parenth)
+                self.walk_matrix(matrix_node.sub_tokens[2],matrix,parenth)
+            elif len(matrix_node.sub_tokens) == 1: #leaf node
+                self.walk_matrix(matrix_node.sub_tokens[0],matrix,parenth)
+
+    def parse_matrix(self, matrix_node : GrammerNode,parenth = [])->Matrix:
+        #print(matrix_node.get_summary())
+        #print(self.parse_matrix_row(matrix_node.sub_tokens[0]))
+        matrix_buffer = []
+        self.walk_matrix(matrix_node,matrix_buffer,parenth)
+        return Matrix(matrix_buffer)
+    
 
     def parse_set(self,set_node : GrammerNode,parenth = []):#->float | [float]:
         inner_token : GrammerNode = set_node.sub_tokens[0]
@@ -292,7 +339,7 @@ class DiceSetParser:
 
 
     #handles parsing out arithmatic statements
-    def parse_arithmatic(self,arithmatic : GrammerNode,parenth = [])->float:
+    def parse_arithmatic(self,arithmatic : GrammerNode,parenth = [])->float | Matrix:
         if len(arithmatic.sub_tokens) == 3:
             if arithmatic.sub_tokens[1].token.name == "arithmatic_operator":
                 if self.do_compile:
@@ -345,6 +392,8 @@ class DiceSetParser:
                     self.stream_out(f"\nerror reading unset variable :: {arithmatic.data}")
                     raise ParseError()
                 return self.variable_map[arithmatic.data]
+        elif arithmatic.sub_tokens[0].token.name == "matrix":
+            return self.parse_matrix(arithmatic.sub_tokens[0],parenth)
         else:
             
             inner_parenth = parenth[int(arithmatic.data.split("_")[2][1:])]
@@ -403,4 +452,3 @@ class DiceSetParser:
             self.compile_statement(0, "--", entry_map)
         
         return self.out_buffer
-
