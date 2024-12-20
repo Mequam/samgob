@@ -52,11 +52,17 @@ class DiceSetParser:
         #since we are using this object purly for operator parsing
         if not kwargs["only_operations"] if "only_operations" in kwargs else True:
 
+            #language file that contains the specs for the samgob language
             language_file = kwargs["language_file"] if "language_file" in kwargs else os.path.join(
                                                                                         os.path.dirname(
                                                                                             os.path.abspath(__file__)
                                                                                             ),
                                                                                         "dice_set.lang")
+            
+            #determines if we are going to print matricies using samgbos formating or
+            #with numpy formating
+            self.numpy_matrix_formating = kwargs["numpy_matrix_formating"] if "numpy_matrix_formating" in kwargs else False
+
             #generate the langauge structure
             lang,lexims,maps = LanguageMap.from_file(language_file,
                                                      entry_point = "statement")
@@ -238,7 +244,9 @@ class DiceSetParser:
                         n = self.parse_arithmatic(expression_token,parenth)
                         
                         if isinstance(n, Matrix):
-                            self.stream_out(str(n),end=self.print_delimiter)
+                            self.stream_out(
+                                            str(n) if self.numpy_matrix_formating else n.samgob_string(),
+                                            end=self.print_delimiter)
                         else:
                             self.stream_out("%g" % n, end=self.print_delimiter)
 
