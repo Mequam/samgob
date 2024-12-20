@@ -374,6 +374,12 @@ class DiceSetParser:
                                 self.parse_arithmatic(arithmatic.sub_tokens[0],parenth),
                                 self.parse_set(arithmatic.sub_tokens[2],parenth)
                             )
+            elif arithmatic.sub_tokens[1].token.name == "matrix_function_operator":
+                m = self.parse_matrix(arithmatic.sub_tokens[0])
+                try:
+                    return getattr(m,arithmatic.sub_tokens[2].data)()
+                except:
+                    raise ParseError("invalid matrix operation")
         elif len(arithmatic.sub_tokens) == 2:
             if self.do_compile:
                 self.stream_out(f"context.unary_set_compressors['{arithmatic.sub_tokens[0].data}'](",

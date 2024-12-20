@@ -17,6 +17,7 @@ w = w
 S = S
 variable = [a-ce-rt-vx-z]+
 word = [^\s]+
+matrix_function_operator = ~
 equals = =
 
 
@@ -27,6 +28,7 @@ assignment = <variable><equals><arithmatic>|<variable><equals><set>
 set = <set><set_operator><set>|<arithmatic>|<range>
 
 arithmatic =
+            <matrix><matrix_function_operator><word>
             <matrix>
             <arithmatic><arithmatic_operator><arithmatic>
             <arithmatic><set_compressor><set>
