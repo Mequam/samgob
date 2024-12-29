@@ -1,4 +1,5 @@
-number = [0-9]+
+float = [0-9]*\.[0-9]+
+integer = [0-9]+
 parenthasis = __P[0-9]+__
 arithmatic_operator = <=|>=|<|>|==|\+|-|\*|/
 matrix_column_operator = ,
@@ -26,7 +27,7 @@ equals = =
 
 assignment = <variable><equals><arithmatic>|<variable><equals><set>
 set = <set><set_operator><set>|<arithmatic>|<range>
-
+number = <float>|<integer>
 arithmatic =
             <matrix><matrix_function_operator><word>
             <variable><matrix_function_operator><word>

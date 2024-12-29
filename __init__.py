@@ -464,7 +464,7 @@ class DiceSetParser:
         g = entry_map.match(statement.strip() + ";")
         if g == None:
             self.stream_out(f"error on statement {idx} :: {statement}")
-            raise ParseError()
+            raise ParseError("no detected token")
         else:
             #print(g.get_summary())
             self.parse_statement(g,parenth)
