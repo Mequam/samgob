@@ -29,6 +29,7 @@ set = <set><set_operator><set>|<arithmatic>|<range>
 
 arithmatic =
             <matrix><matrix_function_operator><word>
+            <variable><matrix_function_operator><word>
             <matrix>
             <arithmatic><arithmatic_operator><arithmatic>
             <arithmatic><set_compressor><set>

@@ -213,7 +213,24 @@ class DiceSetParser:
                     self.statement_stream.add_while(n>0,flow_token.data,self.print_delimiter)
 
     def parse_statement(self,statement : GrammerNode,parenth = []):
-        #print(statement.get_summary())
+        """
+        this is the entry point for parsing a single grammer node statement of the sam gob
+        language
+
+        since this is a fully fledged programming language the parsing can get a little hary (and my coding style :)),
+        a good reference to help follow along with what these functions are doing is the dice_set.lang file that contains the
+        spec of the language that is used to parse out tokens
+
+        typically, each token will get a function dedicated to parsing out its grammer node, and these functions will be named
+
+        parse_<tokenname>
+
+        then the arragment of sub tokens on that particular grammer node determines the course of action for the langauage
+        interpreter to take
+
+        again, see dice_set.lang for the langauge specs on how the tokens are set up, it is VERY helpful for following along with
+        the logic here
+        """
         expr = statement.sub_tokens[0]
         expression_token = expr.sub_tokens[0]
         
@@ -306,8 +323,11 @@ class DiceSetParser:
                 self.walk_matrix(matrix_node.sub_tokens[0],matrix,parenth)
 
     def parse_matrix(self, matrix_node : GrammerNode,parenth = [])->Matrix:
-        #print(matrix_node.get_summary())
-        #print(self.parse_matrix_row(matrix_node.sub_tokens[0]))
+        """
+        wrapper function that holds a buffer for the recursive matrix walk, that 
+        way when the walk finishes we can create a matrix class object and pass it out of the system
+        without adding extra complexity to the recursion
+        """
         matrix_buffer = []
         self.walk_matrix(matrix_node,matrix_buffer,parenth)
         return Matrix(matrix_buffer)
@@ -375,7 +395,13 @@ class DiceSetParser:
                                 self.parse_set(arithmatic.sub_tokens[2],parenth)
                             )
             elif arithmatic.sub_tokens[1].token.name == "matrix_function_operator":
-                m = self.parse_matrix(arithmatic.sub_tokens[0])
+                m = None
+                
+                if arithmatic.sub_tokens[0].token.name == "variable": #check to see if we are storing a variable
+                    m = self.variable_map[arithmatic.sub_tokens[0].data]
+                else:
+                    m = self.parse_matrix(arithmatic.sub_tokens[0])
+
                 try:
                     return getattr(m,arithmatic.sub_tokens[2].data)()
                 except:
