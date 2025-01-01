@@ -15,7 +15,7 @@ class ControlFlowIterator:
         #determines if we are currently in a while loop
         self.while_flag = False
         #flag indicating we finish a loop
-        self.eos_loop_end = "--"
+        self.eos_loop_end = '::'
 
         #function called when we break out of a loop or if statment, this is set elsewhere so for now
         #we default it to doing nothing

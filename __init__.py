@@ -244,7 +244,7 @@ class DiceSetParser:
                     self.statement_stream.set_else(False,self.print_delimiter)
                 else:
                     """
-                    we still care about control flow for the ordering of --
+                    we still care about control flow for the ordering of ff
                     but we don't want to parse loops, so a neet hack is to add
                     a true if statement that does nothing, but gets poped when it finds
                     the flow end
@@ -407,15 +407,19 @@ class DiceSetParser:
                 except:
                     raise ParseError("invalid matrix operation")
         elif len(arithmatic.sub_tokens) == 2:
-            if self.do_compile:
-                self.stream_out(f"context.unary_set_compressors['{arithmatic.sub_tokens[0].data}'](",
-                      end="")
-                self.parse_set(arithmatic.sub_tokens[1],parenth)
-                self.stream_out(f")",end="")
-            else:
-                return self.unary_set_compressors[arithmatic.sub_tokens[0].data](
-                        self.parse_set(arithmatic.sub_tokens[1],parenth)
-                    )
+            if arithmatic.sub_tokens[0].token.name == "unary_set_compressor":
+                if self.do_compile:
+                    self.stream_out(f"context.unary_set_compressors['{arithmatic.sub_tokens[0].data}'](",
+                          end="")
+                    self.parse_set(arithmatic.sub_tokens[1],parenth)
+                    self.stream_out(f")",end="")
+                else:
+                    return self.unary_set_compressors[arithmatic.sub_tokens[0].data](
+                            self.parse_set(arithmatic.sub_tokens[1],parenth)
+                        )
+            elif arithmatic.sub_tokens[0].token.name == "negation":
+                #negate the given arithmatic
+                return -self.parse_arithmatic(arithmatic.sub_tokens[1])
         elif arithmatic.sub_tokens[0].token.name == "number":
             if self.do_compile:
                 self.stream_out(arithmatic.data,end="")
@@ -489,6 +493,6 @@ class DiceSetParser:
 
         #ensure we handle eof as closing each of our while loops properly
         while self.do_compile and self.tab_order > 0:
-            self.compile_statement(0, "--", entry_map)
+            self.compile_statement(0, "::", entry_map)
         
         return self.out_buffer
